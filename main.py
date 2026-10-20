@@ -1,7 +1,10 @@
 # main.py
 import time
 import math
+from venv import logger
 import pygame
+import logging
+import os
 
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, GREEN, RED, BLUE,
@@ -10,8 +13,26 @@ from settings import (
 from ship import Ship
 from asteroid import Asteroid
 from button import Button
-from utils import check_collision
+from utils import check_collision, spawn_safe_asteroid
 from ui import draw_menu, draw_game_over
+from level_loader import load_level, get_default_level
+from utils import check_collision, ship_reached_exit
+from scores import save_score
+from ui import ask_player_name
+
+os.makedirs("logs", exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler("logs/game.log", encoding="utf-8"),
+        logging.StreamHandler(),   # опционально: вывод в консоль
+    ],
+)
+
+
 
 
 def main():
@@ -23,6 +44,17 @@ def main():
     # Состояния игры
     MENU, PLAYING, GAME_OVER = 0, 1, 2
     game_state = MENU
+
+    level = load_level("level.json")
+    if level is None:
+        level = get_default_level()
+
+    final_score = 0
+
+    # Сохраняем уровень в game_state / в объект игры
+    # game.level = level
+
+    
 
     # Кнопки
     start_button = Button(SCREEN_WIDTH // 2 - 100, 450, 200, 60,
@@ -50,7 +82,7 @@ def main():
             if game_state == MENU:
                 if start_button.handle_event(event):
                     ship = Ship(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-                    asteroids = [Asteroid() for _ in range(MAX_ASTEROIDS)]
+                    asteroids = [spawn_safe_asteroid(ship) for _ in range(MAX_ASTEROIDS)]
                     score = 0
                     score_start_time = time.time()
                     game_state = PLAYING
@@ -72,6 +104,12 @@ def main():
             score = int(time.time() - score_start_time)
 
             keys = pygame.key.get_pressed()
+            
+            if keys[pygame.K_w]:
+                ship.apply_thrust()
+                logger.debug("Шаг игрока: тяга (vx=%.2f, vy=%.2f)", ship.vx, ship.vy)
+
+            
             if keys[pygame.K_a]: ship.alpha -= 0.05
             if keys[pygame.K_d]: ship.alpha += 0.05
             if keys[pygame.K_w]: ship.apply_thrust()
@@ -81,14 +119,36 @@ def main():
             for asteroid in asteroids:
                 asteroid.update()
 
+            if check_collision(ship, asteroid):
+                logger.info("Поражение. Счёт: %d", score)
+
+            player = ask_player_name(screen, clock)
+            save_score(player, score, result="lose")
+
+            final_score = score
+            game_state = GAME_OVER
+            break
+
             for asteroid in asteroids:
+                for asteroid in asteroids:
+                    dx = ship.x - asteroid.x
+                    dy = ship.y - asteroid.y
+                    dist = math.hypot(dx, dy)
+                    print(f"ship=({ship.x:.0f},{ship.y:.0f}) ast=({asteroid.x:.0f},{asteroid.y:.0f}) "
+                    f"r={asteroid.radius} dist={dist:.0f}")
                 if check_collision(ship, asteroid):
+                    logger.info("Поражение. Финальный счёт: %d", score)
                     final_score = score
                     game_state = GAME_OVER
                     break
 
+            if game_state == PLAYING and ship_reached_exit(ship, level):
+                logger.info("Победа! Счёт: %d", score)
+                final_score = score
+                game_state = GAME_OVER
+
             while len(asteroids) < MAX_ASTEROIDS:
-                asteroids.append(Asteroid())
+                asteroids.append(spawn_safe_asteroid(ship))
 
             # Отрисовка
             screen.fill((0, 0, 0))

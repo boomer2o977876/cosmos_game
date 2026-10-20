@@ -4,7 +4,7 @@ import random
 import pygame
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, BLACK, BLUE,
-    LIGHT_GRAY, RED, YELLOW
+    LIGHT_GRAY, RED, WHITE, YELLOW
 )
 from ship import Ship
 
@@ -47,6 +47,44 @@ def draw_menu(screen, start_button, quit_button):
     quit_button.draw(screen)
 pass
 
+def ask_player_name(screen, clock):
+    """
+    Простой ввод имени в стиле аркады.
+    Возвращает строку (может быть пустой).
+    """
+    font = pygame.font.Font(None, 48)
+    hint_font = pygame.font.Font(None, 28)
+
+    name = ""
+    input_active = True
+
+    while input_active:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return ""
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    input_active = False
+                elif event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                elif event.unicode.isprintable() and len(name) < 15:
+                    name += event.unicode
+
+        screen.fill(BLACK)
+
+        title = font.render("Введите имя:", True, YELLOW)
+        screen.blit(title, title.get_rect(center=(400, 200)))
+
+        name_surf = font.render(name + "_", True, WHITE)
+        screen.blit(name_surf, name_surf.get_rect(center=(400, 300)))
+
+        hint = hint_font.render("Enter — подтвердить", True, WHITE)
+        screen.blit(hint, hint.get_rect(center=(400, 400)))
+
+        pygame.display.flip()
+        clock.tick(30)
+
+    return name.strip() or "Игрок"
 
 def draw_game_over(screen, ship, asteroids, restart_button, quit_button, final_score=0):
     """Отрисовка экрана Game Over"""

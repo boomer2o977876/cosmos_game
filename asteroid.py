@@ -2,11 +2,13 @@
 import random
 import math
 import pygame
+import logging
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, ASTEROID_RADIUS,
     ASTEROID_SPEED, ASTEROID_COLOR
 )
 
+logger = logging.getLogger(__name__)
 
 class Asteroid:
     def __init__(self):
@@ -27,7 +29,8 @@ class Asteroid:
         angle = random.uniform(0, 2 * math.pi)
         self.vx = ASTEROID_SPEED * math.cos(angle)
         self.vy = ASTEROID_SPEED * math.sin(angle)
-        self.radius = random.randint(15, 30)   # ← ВОТ ЭТА СТРОКА
+        self.radius = random.randint(15, 30)
+        self.state = "patrol"
 
     def update(self):
         self.x += self.vx
