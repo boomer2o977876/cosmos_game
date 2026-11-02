@@ -2,16 +2,15 @@
 import random
 import math
 import pygame
-import logging
 from settings import (
-    SCREEN_WIDTH, SCREEN_HEIGHT, ASTEROID_RADIUS,
-    ASTEROID_SPEED, ASTEROID_COLOR
+    SCREEN_WIDTH, SCREEN_HEIGHT, ASTEROID_SPEED,
+    ASTEROID_COLOR, ASTEROID_RADIUS
 )
 
-logger = logging.getLogger(__name__)
 
 class Asteroid:
-    def __init__(self):
+    def __init__(self, speed: float = None, radius: int = None):
+        # --- позиция спавна за экраном ---
         side = random.randint(0, 3)
         if side == 0:
             self.x = random.randint(0, SCREEN_WIDTH)
@@ -26,11 +25,26 @@ class Asteroid:
             self.x = SCREEN_WIDTH + ASTEROID_RADIUS
             self.y = random.randint(0, SCREEN_HEIGHT)
 
+        # --- скорость ---
+        spd = float(speed) if speed is not None else float(ASTEROID_SPEED)
         angle = random.uniform(0, 2 * math.pi)
-        self.vx = ASTEROID_SPEED * math.cos(angle)
-        self.vy = ASTEROID_SPEED * math.sin(angle)
-        self.radius = random.randint(15, 30)
-        self.state = "patrol"
+        self.vx = spd * math.cos(angle)
+        self.vy = spd * math.sin(angle)
+
+        # --- радиус ---
+        self.radius = int(radius) if radius is not None else random.randint(15, 30)
+
+        # --- кратеры: генерируем ОДИН раз, чтобы не мерцали в draw() ---
+        self.craters = []
+        n = random.randint(2, 4)
+        for _ in range(n):
+            a = random.uniform(0, 2 * math.pi)
+            d = random.randint(3, max(4, self.radius - 5))
+            self.craters.append((
+                d * math.cos(a),
+                d * math.sin(a),
+                random.randint(2, 5),
+            ))
 
     def update(self):
         self.x += self.vx
@@ -39,11 +53,12 @@ class Asteroid:
         self.y %= SCREEN_HEIGHT
 
     def draw(self, screen):
-        pygame.draw.circle(screen, ASTEROID_COLOR, (int(self.x), int(self.y)), self.radius)
-        for _ in range(3):
-            angle = random.uniform(0, 2 * math.pi)
-            dist = random.randint(5, self.radius - 5)
-            crater_x = int(self.x + dist * math.cos(angle))
-            crater_y = int(self.y + dist * math.sin(angle))
-            crater_size = random.randint(2, 5)
-            pygame.draw.circle(screen, (100, 100, 100), (crater_x, crater_y), crater_size)
+        pygame.draw.circle(
+            screen, ASTEROID_COLOR,
+            (int(self.x), int(self.y)), self.radius
+        )
+        for cx, cy, cr in self.craters:
+            pygame.draw.circle(
+                screen, (100, 100, 100),
+                (int(self.x + cx), int(self.y + cy)), cr
+            )

@@ -4,7 +4,7 @@ import random
 import pygame
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, BLACK, BLUE,
-    LIGHT_GRAY, RED, WHITE, YELLOW
+    LIGHT_GRAY, RED, YELLOW, WHITE
 )
 from ship import Ship
 
@@ -47,44 +47,6 @@ def draw_menu(screen, start_button, quit_button):
     quit_button.draw(screen)
 pass
 
-def ask_player_name(screen, clock):
-    """
-    Простой ввод имени в стиле аркады.
-    Возвращает строку (может быть пустой).
-    """
-    font = pygame.font.Font(None, 48)
-    hint_font = pygame.font.Font(None, 28)
-
-    name = ""
-    input_active = True
-
-    while input_active:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return ""
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    input_active = False
-                elif event.key == pygame.K_BACKSPACE:
-                    name = name[:-1]
-                elif event.unicode.isprintable() and len(name) < 15:
-                    name += event.unicode
-
-        screen.fill(BLACK)
-
-        title = font.render("Введите имя:", True, YELLOW)
-        screen.blit(title, title.get_rect(center=(400, 200)))
-
-        name_surf = font.render(name + "_", True, WHITE)
-        screen.blit(name_surf, name_surf.get_rect(center=(400, 300)))
-
-        hint = hint_font.render("Enter — подтвердить", True, WHITE)
-        screen.blit(hint, hint.get_rect(center=(400, 400)))
-
-        pygame.display.flip()
-        clock.tick(30)
-
-    return name.strip() or "Игрок"
 
 def draw_game_over(screen, ship, asteroids, restart_button, quit_button, final_score=0):
     """Отрисовка экрана Game Over"""
@@ -113,3 +75,54 @@ def draw_game_over(screen, ship, asteroids, restart_button, quit_button, final_s
     restart_button.draw(screen)
     quit_button.draw(screen)
     pass
+
+def draw_highscores(screen, records, back_button):
+    """
+    Экран таблицы рекордов.
+    records — список dict от HighScores.top().
+    """
+    screen.fill(BLACK)
+
+    # звездный фон
+    for _ in range(80):
+        x = random.randint(0, SCREEN_WIDTH)
+        y = random.randint(0, SCREEN_HEIGHT)
+        size = random.randint(1, 2)
+        b = random.randint(80, 200)
+        pygame.draw.circle(screen, (b, b, b), (x, y), size)
+
+    # заголовок
+    title_font = pygame.font.Font(None, 64)
+    title = title_font.render("ТАБЛИЦА РЕКОРДОВ", True, YELLOW)
+    screen.blit(title, title.get_rect(center=(SCREEN_WIDTH // 2, 60)))
+
+    # заголовки столбцов
+    head_font = pygame.font.Font(None, 28)
+    row_font  = pygame.font.Font(None, 26)
+
+    left = 60
+    col_x = [left, left + 60, left + 130, left + 400, left + 620]
+    headers = ["#", "Счёт", "Уровень", "Название уровня", "Дата"]
+    for x, h in zip(col_x, headers):
+        screen.blit(head_font.render(h, True, LIGHT_GRAY), (x, 130))
+
+    pygame.draw.line(screen, (80, 80, 80), (left, 160),
+                     (SCREEN_WIDTH - 40, 160), 2)
+
+    # строки
+    y = 175
+    if not records:
+        msg = row_font.render("Пока нет рекордов. Сыграйте первую игру!",
+                              True, LIGHT_GRAY)
+        screen.blit(msg, msg.get_rect(center=(SCREEN_WIDTH // 2, 300)))
+    else:
+        for i, r in enumerate(records[:10], start=1):
+            color = YELLOW if i == 1 else WHITE if i <= 3 else LIGHT_GRAY
+            screen.blit(row_font.render(f"{i}", True, color), (col_x[0], y))
+            screen.blit(row_font.render(f"{r['score']}", True, color), (col_x[1], y))
+            screen.blit(row_font.render(f"{r['level']}", True, color), (col_x[2], y))
+            screen.blit(row_font.render(f"{r['level_name']}", True, color), (col_x[3], y))
+            screen.blit(row_font.render(f"{r['date']}", True, color), (col_x[4], y))
+            y += 32
+
+    back_button.draw(screen)

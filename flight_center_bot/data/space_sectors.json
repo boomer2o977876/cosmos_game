@@ -1,0 +1,56 @@
+{
+  "sector_name": "Альфа-Центавра",
+  "level_duration_seconds": 30,
+  "levels": [
+    {
+      "level": 1,
+      "name": "Спокойный сектор",
+      "max_asteroids": 6,
+      "asteroid_speed_min": 1.0,
+      "asteroid_speed_max": 2.0,
+      "asteroid_radius_min": 15,
+      "asteroid_radius_max": 25,
+      "spawn_interval_seconds": 2.0
+    },
+    {
+      "level": 2,
+      "name": "Пояс астероидов",
+      "max_asteroids": 8,
+      "asteroid_speed_min": 1.5,
+      "asteroid_speed_max": 3.0,
+      "asteroid_radius_min": 12,
+      "asteroid_radius_max": 28,
+      "spawn_interval_seconds": 1.5
+    },
+    {
+      "level": 3,
+      "name": "Метеоритный шторм",
+      "max_asteroids": 11,
+      "asteroid_speed_min": 2.0,
+      "asteroid_speed_max": 3.8,
+      "asteroid_radius_min": 10,
+      "asteroid_radius_max": 30,
+      "spawn_interval_seconds": 1.0
+    },
+    {
+      "level": 4,
+      "name": "Осколки кометы",
+      "max_asteroids": 14,
+      "asteroid_speed_min": 2.5,
+      "asteroid_speed_max": 4.5,
+      "asteroid_radius_min": 8,
+      "asteroid_radius_max": 32,
+      "spawn_interval_seconds": 0.7
+    },
+    {
+      "level": 5,
+      "name": "Ядро пояса",
+      "max_asteroids": 18,
+      "asteroid_speed_min": 3.0,
+      "asteroid_speed_max": 5.5,
+      "asteroid_radius_min": 8,
+      "asteroid_radius_max": 35,
+      "spawn_interval_seconds": 0.5
+    }
+  ]
+}

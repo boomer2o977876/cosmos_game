@@ -1,6 +1,9 @@
 # settings.py
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+LOG_PATH = "flight_data.log"
+SECTOR_CONFIG_PATH = "space_sectors.json"
+
+SCREEN_WIDTH = 900
+SCREEN_HEIGHT = 800
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
