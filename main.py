@@ -4,6 +4,8 @@ import math
 import random
 import pygame
 
+from physics_bridge import JSPhysicsEngine
+
 from settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, GREEN, RED, BLUE,
     DARK_BLUE, WHITE, YELLOW, LIGHT_GRAY
@@ -29,6 +31,9 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Космическая Одиссея")
     clock = pygame.time.Clock()
+
+        # --- Инициализация JS движка ---
+    physics = JSPhysicsEngine()
 
     MENU, PLAYING, GAME_OVER, HIGHSCORES = 0, 1, 2, 3
     game_state = MENU
@@ -121,9 +126,24 @@ def main():
             if keys[pygame.K_w]: ship.apply_thrust()
             if keys[pygame.K_s]: ship.apply_brake()
 
-            ship.update()
-            for a in asteroids:
-                a.update()
+            keys_state = {
+                "w": keys[pygame.K_w],
+                "s": keys[pygame.K_s]
+            }
+            # Отправляем в JS, получаем готовые координаты и флаг коллизии
+            ship, asteroids, is_collision_js = physics.update(ship, asteroids, keys_state, dt)
+            
+            # Проверяем коллизию по результатам из JS
+            if is_collision_js:
+                final_score = score
+                game_state = GAME_OVER
+                recorder.stop()
+                highscores.add(
+                    score=final_score,
+                    level=cfg.level,
+                    level_name=cfg.name,
+                    sector=level_manager.sector_name,
+                )
 
             changed = level_manager.update(dt)
             cfg = level_manager.current_level
@@ -203,6 +223,7 @@ def main():
         pygame.display.flip()
 
     recorder.stop()
+    physics.close()
     pygame.quit()
 
 

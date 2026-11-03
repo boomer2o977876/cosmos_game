@@ -46,11 +46,6 @@ class Asteroid:
                 random.randint(2, 5),
             ))
 
-    def update(self):
-        self.x += self.vx
-        self.y += self.vy
-        self.x %= SCREEN_WIDTH
-        self.y %= SCREEN_HEIGHT
 
     def draw(self, screen):
         pygame.draw.circle(

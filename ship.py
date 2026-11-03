@@ -16,26 +16,6 @@ class Ship:
         self.vy = 0.0
         self.is_braking = False
 
-    def update(self):
-        self.x += self.vx
-        self.y += self.vy
-        self.x %= SCREEN_WIDTH
-        self.y %= SCREEN_HEIGHT
-        self.is_braking = False
-
-    def apply_thrust(self):
-        self.vx += THRUST * math.cos(self.alpha)
-        self.vy += THRUST * math.sin(self.alpha)
-
-    def apply_brake(self):
-        self.is_braking = True
-        speed = math.hypot(self.vx, self.vy)
-        if speed > 0.1:
-            self.vx -= BRAKE_THRUST * (self.vx / speed)
-            self.vy -= BRAKE_THRUST * (self.vy / speed)
-        else:
-            self.vx = 0
-            self.vy = 0
 
     def draw(self, screen):
         # Корпус корабля
