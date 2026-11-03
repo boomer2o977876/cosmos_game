@@ -289,7 +289,7 @@ Telegram-бот на базе **aiogram 3** и **Python 3.13**, который �
 Откройте терминал в папке с ботом и выполните:
 ```bash
 python -m pip install -U aiogram aiofiles python-dotenv
-
+```
 # Модуль физики на JavaScript 
 
 Данный модуль реализует векторную физику движения корабля в невесомости, логику циклического экрана (wrap-around) и обсчет коллизий (теорема Пифагора).
@@ -299,8 +299,7 @@ python -m pip install -U aiogram aiofiles python-dotenv
 Тестирование ядра:
 ```bash
 node selftest.js
-
+```
 ## 📄 Лицензия
 
 Учебный проект. Свободен для использования и модификации.
-```
