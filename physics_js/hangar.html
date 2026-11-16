@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Космический Ангар - Админ-панель</title>
+    <link rel="stylesheet" href="hangar.css">
+</head>
+<body>
+    <header>
+        <h1>🛸 Космический Ангар</h1>
+        <p>Панель управления флотом</p>
+    </header>
+
+    <main>
+        <!-- Форма создания/редактирования (Create / Update) -->
+        <section class="form-section">
+            <h2 id="form-title">Добавить новый корабль</h2>
+            <form id="ship-form">
+                <input type="hidden" id="ship-id">
+                
+                <div class="input-group">
+                    <label for="ship-name">Название:</label>
+                    <input type="text" id="ship-name" required placeholder="Например: Тысячелетний сокол">
+                </div>
+
+                <div class="input-group">
+                    <label for="ship-mass">Масса (т):</label>
+                    <input type="number" id="ship-mass" required min="1" step="1" placeholder="100">
+                </div>
+
+                <div class="input-group">
+                    <label for="ship-thrust">Сила тяги (кН):</label>
+                    <input type="number" id="ship-thrust" required min="1" step="1" placeholder="500">
+                </div>
+
+                <div class="input-group">
+                    <label for="ship-durability">Прочность корпуса:</label>
+                    <input type="number" id="ship-durability" required min="1" max="100" placeholder="100">
+                </div>
+
+                <div class="actions">
+                    <button type="submit" id="submit-btn">Создать корабль</button>
+                    <button type="button" id="cancel-btn" style="display:none;">Отмена</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Список кораблей (Read) -->
+        <section class="list-section">
+            <div class="list-header">
+                <h2>Флот</h2>
+                <input type="text" id="search-input" placeholder="🔍 Поиск по названию...">
+            </div>
+            
+            <div id="ships-container" class="ships-grid">
+                <!-- Сюда JS будет вставлять карточки -->
+            </div>
+        </section>
+    </main>
+
+    <script src="hangar.js"></script>
+</body>
+</html>

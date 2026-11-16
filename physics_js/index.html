@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Космическая Одиссея - Web</title>
+    <style>
+        body { margin: 0; background: #111; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+        
+        /* Общие стили для экранов */
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; justify-content: center; }
+        .screen.active { display: flex; }
+
+        /* Главное меню */
+        #main-menu h1 { color: #4af; font-size: 48px; margin-bottom: 10px; text-shadow: 0 0 10px rgba(68,170,255,0.5); }
+        .ship-selector { padding: 15px; background: #222; border: 1px solid #444; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .ship-selector select { padding: 10px; font-size: 16px; background: #333; color: #fff; border: 1px solid #555; border-radius: 5px; width: 300px; margin-top: 10px; }
+        button { padding: 12px 24px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; transition: 0.2s; }
+        .btn-start { background: #4af; color: #000; }
+        .btn-start:hover { background: #6bf; box-shadow: 0 0 15px rgba(68,170,255,0.6); }
+        .btn-scores { background: #555; color: #fff; margin-top: 15px; }
+        .btn-scores:hover { background: #777; }
+        .btn-hangar { background: #f80; color: #000; margin-top: 15px; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; }
+
+        /* Таблица рекордов */
+        #scores-screen table { width: 600px; border-collapse: collapse; margin-top: 20px; background: #1e1e1e; }
+        #scores-screen th, #scores-screen td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+        #scores-screen th { color: #4af; }
+        #scores-screen tr:nth-child(even) { background: #222; }
+
+        /* Игровой экран */
+        #game-screen { position: relative; }
+        canvas { border: 2px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        
+        /* Пауза */
+        #pause-overlay { position: absolute; top: 0; left: 0; width: 900px; height: 800px; background: rgba(0,0,0,0.7); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+        #pause-overlay h2 { font-size: 48px; color: #fff; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. ГЛАВНОЕ МЕНЮ -->
+    <div id="main-menu" class="screen active">
+        <h1>КОСМИЧЕСКАЯ ОДИССЕЯ</h1>
+        <div class="ship-selector">
+            <label for="ship-selector">Выберите корабль из Ангара:</label>
+            <br>
+            <select id="ship-selector">
+                <option value="">Стандартный корабль</option>
+                <!-- Сюда JS добавит корабли из LocalStorage -->
+            </select>
+        </div>
+        <button class="btn-start" id="btn-start">НАЧАТЬ ПОЛЕТ</button>
+        <button class="btn-scores" id="btn-scores">ТАБЛИЦА ПОЛЕТОВ</button>
+        <a href="hangar.html" class="btn-hangar" style="display:inline-block; margin-top:15px;">🛠 ОТКРЫТЬ АНГАР</a>
+    </div>
+
+    <!-- 2. ИГРОВОЙ ЭКРАН -->
+    <div id="game-screen" class="screen">
+        <canvas id="gameCanvas" width="900" height="800" tabindex="0"></canvas>
+        <div id="pause-overlay">
+            <h2>ПАУЗА</h2>
+            <p style="color:#aaa; margin-bottom:20px;">Нажмите ESC, чтобы продолжить</p>
+        </div>
+    </div>
+
+    <!-- 3. ТАБЛИЦА РЕКОРДОВ -->
+    <div id="scores-screen" class="screen">
+        <h1 style="color:#4af;">ТАБЛИЦА ПОЛЕТОВ</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Время выживания</th>
+                    <th>Корабль</th>
+                    <th>Дата</th>
+                </tr>
+            </thead>
+            <tbody id="scores-body">
+                <!-- Сюда JS добавит рекорды -->
+            </tbody>
+        </table>
+        <button class="btn-scores" id="btn-back-menu" style="margin-top:20px;">НАЗАД В МЕНЮ</button>
+    </div>
+
+    <!-- Подключаем game.js -->
+    <script type="module" src="game.js"></script>
+</body>
+</html>
