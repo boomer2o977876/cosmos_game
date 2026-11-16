@@ -152,6 +152,7 @@ physics_bridge.py	Запускает node physics.js и передает дан�
 physics_js/web_physics.js	Чистая математика для браузера (экспортирует updatePhysics)
 hangar.js	CRUD-логика кораблей с сохранением в localStorage
 game.js	Игровой цикл requestAnimationFrame, отрисовка Canvas, сценарии
+
 💡 Идеи для развития
 ☑ Сохранение рекорда в файл (highscores.csv)
 ☑ Система уровней через конфиг (space_sectors.json)
@@ -161,5 +162,6 @@ game.js	Игровой цикл requestAnimationFrame, отрисовка Canvas
 □ Стрельба и разрушение астероидов
 □ Бонусы: щит, ускорение, замедление времени
 □ Звуковое сопровождение
+
 📄 Лицензия
 Учебный проект. Свободен для использования и модификации.
