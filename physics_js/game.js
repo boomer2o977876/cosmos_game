@@ -2,18 +2,47 @@ import { updatePhysics, SETTINGS } from './web_physics.js';
 
 // --- DOM Элементы ---
 const screens = {
-    menu: document.getElementById('main-menu'),
+    menu: document.getElementById('menu-screen'),
     game: document.getElementById('game-screen'),
-    scores: document.getElementById('scores-screen')
+    scores: document.getElementById('scores-screen'),
+    hangar: document.getElementById('hangar-screen')
 };
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const btnStart = document.getElementById('btn-start');
-const btnScores = document.getElementById('btn-scores');
-const btnBackMenu = document.getElementById('btn-back-menu');
 const shipSelector = document.getElementById('ship-selector');
 const scoresBody = document.getElementById('scores-body');
 const pauseOverlay = document.getElementById('pause-overlay');
+
+const hpBar = document.getElementById('hp-bar');
+const hpText = document.getElementById('hp-text');
+const scoreText = document.getElementById('score-text');
+const speedText = document.getElementById('speed-text');
+const sidebarShipSelector = document.getElementById('sidebar-ship-selector');
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        // Снимаем активный класс со всех кнопок
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Показываем нужный экран
+        const target = e.target.dataset.target;
+        Object.values(screens).forEach(s => s.classList.remove('active'));
+        screens[target.replace('-screen', '')].classList.add('active');
+
+        // Скрываем выбор корабля, если мы не в меню
+        sidebarShipSelector.style.display = (target === 'menu-screen') ? 'block' : 'none';
+        
+        // ВАЖНО: Обновляем списки при переключении вкладок!
+        if (target === 'menu-screen') {
+            loadShips(); // Перечитываем localStorage и обновляем select
+        }
+        if (target === 'scores-screen') {
+            renderScores();
+        }
+    });
+});
 
 // --- Состояние игры ---
 let ship = { x: 450, y: 400, vx: 0, vy: 0, alpha: 0, thrustValue: 0.2 };
@@ -24,6 +53,9 @@ let isHyperdrive = false;
 let isPaused = false;
 let isPlaying = false;
 let animationId = null;
+
+let isInvulnerable = false;
+let invulnerableTimer = 0;
 
 let score = 0;
 let startTime = 0;
@@ -91,8 +123,9 @@ function applyShipStats() {
     const savedShips = JSON.parse(localStorage.getItem('space_hangar_ships') || '[]');
     const activeShip = savedShips.find(s => s.id == activeId);
 
-    if (activeShip) {
-        ship.thrustValue = 0.2 * (activeShip.thrust / 500);
+   if (activeShip) {
+        // Ограничиваем базовую тягу, чтобы корабль не улетал за край экрана за 1 кадр
+        ship.thrustValue = Math.min(0.4, 0.2 * (activeShip.thrust / 500)); 
         maxDurability = activeShip.durability;
         activeShipName = activeShip.name;
         ship.color = '#4af';
@@ -111,6 +144,9 @@ function startGame() {
     particles = [];
     isPaused = false;
     score = 0;
+    isInvulnerable = false;
+    invulnerableTimer = 0;
+    currentDurability = maxDurability;
     
     applyShipStats();
     startTime = performance.now();
@@ -212,36 +248,30 @@ function draw() {
     ctx.save();
     ctx.translate(ship.x, ship.y);
     ctx.rotate(ship.alpha);
+    
+    // Мигание при неуязвимости
+    if (isInvulnerable && Math.floor(invulnerableTimer / 100) % 2 === 0) {
+        ctx.globalAlpha = 0.3; 
+    }
+
     ctx.beginPath();
     ctx.moveTo(SETTINGS.SHIP_RADIUS, 0);
     ctx.lineTo(-SETTINGS.SHIP_RADIUS * 0.7, -SETTINGS.SHIP_RADIUS * 0.7);
     ctx.lineTo(-SETTINGS.SHIP_RADIUS * 0.7, SETTINGS.SHIP_RADIUS * 0.7);
     ctx.closePath();
+    
+    // Красим в желтый, если включен God Mode, иначе в цвет из конфига
     ctx.fillStyle = isGodMode ? '#ff0' : (ship.color || '#fff');
     ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
-    ctx.restore();
-
-    // HUD
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(20, 20, 200, 25);
-    ctx.fillStyle = currentDurability > 30 ? '#0f0' : '#f00';
-    ctx.fillRect(22, 22, (currentDurability / maxDurability) * 196, 21);
-    ctx.strokeStyle = '#fff';
-    ctx.strokeRect(20, 20, 200, 25);
-    ctx.fillStyle = '#fff';
-    ctx.font = '14px monospace';
-    ctx.fillText(`HP: ${Math.round(currentDurability)}/${maxDurability}`, 30, 37);
-
-    ctx.font = '24px monospace';
-    ctx.fillStyle = '#4af';
-    ctx.fillText(`Счет: ${score}`, 20, 80);
     
-    ctx.font = '18px monospace';
-    ctx.fillStyle = '#ccc';
-    const speed = Math.hypot(ship.vx, ship.vy);
-    ctx.fillText(`Скорость: ${speed.toFixed(2)}`, 20, 110);
+    // Добавляем обводку (синий неон)
+    ctx.strokeStyle = '#4af';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.restore();
+    // --- КОНЕЦ ОТРИСОВКИ КОРАБЛЯ ---
+
 }
 
 function createParticles() {
@@ -268,6 +298,26 @@ function updateParticles() {
     }
 }
 
+function updateHUD(speed) {
+    // 1. Обновление здоровья (HP)
+    const hpPercent = (currentDurability / maxDurability) * 100;
+    hpBar.style.width = `${hpPercent}%`;
+    hpText.textContent = `${Math.round(currentDurability)}/${maxDurability}`;
+
+    // Меняем цвет от зеленого к красному
+    if (hpPercent > 60) hpBar.style.backgroundColor = '#0f0'; // Зеленый
+    else if (hpPercent > 25) hpBar.style.backgroundColor = '#f80'; // Оранжевый
+    else hpBar.style.backgroundColor = '#f00'; // Красный
+
+    // 2. Обновление счета
+    scoreText.textContent = score;
+
+    // 3. Обновление скорости (Меняем цвет текста, если скорость критическая)
+    speedText.textContent = speed.toFixed(2);
+    if (speed > 6.0) speedText.style.color = '#f00'; // Перенапряжение двигателя
+    else speedText.style.color = '#4af';
+}
+
 const TIME_STEP = 1000 / 60;
 let accumulator = 0;
 let lastTime = performance.now();
@@ -289,17 +339,31 @@ function gameLoop(currentTime) {
 
         const result = updatePhysics(ship, asteroids, keys, TIME_STEP / 1000);
         
-        if (result.isCollision && !isGodMode) {
-            currentDurability -= 15;
+        if (result.isCollision && !isGodMode && !isInvulnerable) {
+            currentDurability -= 15; // Урон
             asteroids.forEach(a => a.opacity = 0.3);
             
+            // Отталкивание от астероида
             const dx = ship.x - asteroids[0].x;
             const dy = ship.y - asteroids[0].y;
             const dist = Math.hypot(dx, dy);
+            
             if (dist > 0) {
-                ship.vx += (dx / dist) * 5;
-                ship.vy += (dy / dist) * 5;
+                ship.vx += (dx / dist) * 3;
+                ship.vy += (dy / dist) * 3;
             }
+
+            // Ограничиваем максимальную скорость
+            const MAX_SPEED = 5.0;
+            const currentSpeed = Math.hypot(ship.vx, ship.vy);
+            if (currentSpeed > MAX_SPEED) {
+                ship.vx = (ship.vx / currentSpeed) * MAX_SPEED;
+                ship.vy = (ship.vy / currentSpeed) * MAX_SPEED;
+            }
+
+            // Включаем неуязвимость
+            isInvulnerable = true;
+            invulnerableTimer = 1000; // 1 секунда
 
             if (currentDurability <= 0) {
                 isPlaying = false;
@@ -309,6 +373,17 @@ function gameLoop(currentTime) {
                 return; 
             }
         }
+
+        // ТАЙМЕР НЕУЯЗВИМОСТИ (Вычитаем время кадра)
+        if (isInvulnerable) {
+            invulnerableTimer -= TIME_STEP; // Уменьшаем на 16.6 мс каждый шаг физики
+            if (invulnerableTimer <= 0) {
+                isInvulnerable = false; // Выключаем, когда время вышло
+            }
+        }
+        
+
+        
 
         asteroids.forEach(a => {
             if (a.opacity < 1.0) a.opacity += 0.05;
@@ -320,16 +395,18 @@ function gameLoop(currentTime) {
     }
 
     draw();
+
+    const currentSpeed = Math.hypot(ship.vx, ship.vy);
+    updateHUD(currentSpeed);
+
     animationId = requestAnimationFrame(gameLoop);
 }
 
+// Обработчик старта игры (кнопка в главном меню)
 btnStart.addEventListener('click', startGame);
-btnScores.addEventListener('click', () => { renderScores(); showScreen('scores'); });
-btnBackMenu.addEventListener('click', () => showScreen('menu'));
 
-window.addEventListener('keydown', (e) => {
-    console.log("БРАУЗЕР ВИДИТ КЛАВИШУ:", e.key);
-});
-
+// Загружаем корабли при старте
 loadShips();
-showScreen('menu');
+
+
+sidebarShipSelector.style.display = 'block';

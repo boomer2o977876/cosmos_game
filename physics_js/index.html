@@ -2,87 +2,120 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Космическая Одиссея - Web</title>
-    <style>
-        body { margin: 0; background: #111; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
-        
-        /* Общие стили для экранов */
-        .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100vh; justify-content: center; }
-        .screen.active { display: flex; }
-
-        /* Главное меню */
-        #main-menu h1 { color: #4af; font-size: 48px; margin-bottom: 10px; text-shadow: 0 0 10px rgba(68,170,255,0.5); }
-        .ship-selector { padding: 15px; background: #222; border: 1px solid #444; border-radius: 8px; margin-bottom: 20px; text-align: center; }
-        .ship-selector select { padding: 10px; font-size: 16px; background: #333; color: #fff; border: 1px solid #555; border-radius: 5px; width: 300px; margin-top: 10px; }
-        button { padding: 12px 24px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; transition: 0.2s; }
-        .btn-start { background: #4af; color: #000; }
-        .btn-start:hover { background: #6bf; box-shadow: 0 0 15px rgba(68,170,255,0.6); }
-        .btn-scores { background: #555; color: #fff; margin-top: 15px; }
-        .btn-scores:hover { background: #777; }
-        .btn-hangar { background: #f80; color: #000; margin-top: 15px; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; }
-
-        /* Таблица рекордов */
-        #scores-screen table { width: 600px; border-collapse: collapse; margin-top: 20px; background: #1e1e1e; }
-        #scores-screen th, #scores-screen td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
-        #scores-screen th { color: #4af; }
-        #scores-screen tr:nth-child(even) { background: #222; }
-
-        /* Игровой экран */
-        #game-screen { position: relative; }
-        canvas { border: 2px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-        
-        /* Пауза */
-        #pause-overlay { position: absolute; top: 0; left: 0; width: 900px; height: 800px; background: rgba(0,0,0,0.7); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
-        #pause-overlay h2 { font-size: 48px; color: #fff; margin-bottom: 20px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asteroid Escape Arcade</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- 1. ГЛАВНОЕ МЕНЮ -->
-    <div id="main-menu" class="screen active">
-        <h1>КОСМИЧЕСКАЯ ОДИССЕЯ</h1>
-        <div class="ship-selector">
-            <label for="ship-selector">Выберите корабль из Ангара:</label>
-            <br>
-            <select id="ship-selector">
-                <option value="">Стандартный корабль</option>
-                <!-- Сюда JS добавит корабли из LocalStorage -->
-            </select>
-        </div>
-        <button class="btn-start" id="btn-start">НАЧАТЬ ПОЛЕТ</button>
-        <button class="btn-scores" id="btn-scores">ТАБЛИЦА ПОЛЕТОВ</button>
-        <a href="hangar.html" class="btn-hangar" style="display:inline-block; margin-top:15px;">🛠 ОТКРЫТЬ АНГАР</a>
+    <!-- Главный контейнер макета -->
+    <div class="app-container">
+        
+        <!-- Боковое меню (Sidebar) -->
+        <aside class="sidebar">
+            <h1 class="logo">ASTEROID<br>ESCAPE</h1>
+            
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-target="menu-screen">🏠 Главное меню</button>
+                <button class="nav-btn" data-target="hangar-screen">🛠 Космический Ангар</button>
+                <button class="nav-btn" data-target="scores-screen">🏆 Таблица полетов</button>
+            </nav>
+
+            <!-- Блок выбора корабля (появляется только в меню) -->
+            <div class="ship-selector-panel" id="sidebar-ship-selector">
+                <label>Выберите корабль:</label>
+                <select id="ship-selector">
+                    <option value="">Стандартный корабль</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Основная рабочая область -->
+        <main class="main-content">
+            
+            <!-- ЭКРАН 1: ГЛАВНОЕ МЕНЮ -->
+            <section id="menu-screen" class="screen active">
+                <h2>Готов к вылету?</h2>
+                <p style="color: #aaa; margin-bottom: 30px;">Выберите корабль в левом меню и нажмите старт.</p>
+                <button class="btn-primary" id="btn-start">НАЧАТЬ ПОЛЕТ</button>
+            </section>
+
+            <!-- ЭКРАН 2: ИГРА -->
+            <section id="game-screen" class="screen">
+                <!-- HUD (Интерфейс поверх игры) -->
+                <div class="hud">
+                    <div class="hud-item">
+                        <span class="hud-label">Прочность корпуса</span>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="hp-bar"></div>
+                        </div>
+                        <span class="hud-value" id="hp-text">100/100</span>
+                    </div>
+                    <div class="hud-item" style="align-items: flex-end;">
+                        <span class="hud-label">Счет: <span id="score-text" style="color:#fff; font-size:18px;">0</span></span>
+                        <span class="hud-label" style="margin-top:5px;">Скорость: <span id="speed-text" style="color:#4af;">0.00</span></span>
+                    </div>
+                </div>
+                
+                <canvas id="gameCanvas" width="900" height="800"></canvas>
+                
+                <div id="pause-overlay" class="overlay" style="display:none;">
+                    <h2>ПАУЗА</h2>
+                    <p>Нажмите ESC для продолжения</p>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 3: ТАБЛИЦА РЕКОРДОВ -->
+            <section id="scores-screen" class="screen">
+                <h2>Таблица полетов</h2>
+                <table class="scores-table">
+                    <thead>
+                        <tr><th>#</th><th>Время</th><th>Корабль</th><th>Дата</th></tr>
+                    </thead>
+                    <tbody id="scores-body"></tbody>
+                </table>
+            </section>
+
+            <!-- ЭКРАН 4: АНГАР (ЛР 6) -->
+            <section id="hangar-screen" class="screen">
+                <div class="hangar-layout">
+                    <!-- Форма -->
+                    <div class="hangar-form">
+                        <h3 id="form-title">Новый корабль</h3>
+                        <form id="ship-form">
+                            <input type="hidden" id="ship-id">
+                            <div class="input-group">
+                                <label>Название</label>
+                                <input type="text" id="ship-name" required placeholder="X-Wing">
+                            </div>
+                            <div class="input-group">
+                                <label>Масса (т)</label>
+                                <input type="number" id="ship-mass" required min="1" value="100">
+                            </div>
+                            <div class="input-group">
+                                <label>Сила тяги (кН)</label>
+                                <input type="number" id="ship-thrust" required min="1" value="500">
+                            </div>
+                            <div class="input-group">
+                                <label>Прочность корпуса</label>
+                                <input type="number" id="ship-durability" required min="1" value="100">
+                            </div>
+                            <button type="submit" class="btn-primary" style="width:100%;" id="submit-btn">Создать</button>
+                            <button type="button" class="btn-secondary" style="width:100%; display:none;" id="cancel-btn">Отмена</button>
+                        </form>
+                    </div>
+                    <!-- Список -->
+                    <div class="hangar-list">
+                        <input type="text" id="search-input" placeholder="🔍 Поиск...">
+                        <div class="ships-grid" id="ships-container"></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
     </div>
 
-    <!-- 2. ИГРОВОЙ ЭКРАН -->
-    <div id="game-screen" class="screen">
-        <canvas id="gameCanvas" width="900" height="800" tabindex="0"></canvas>
-        <div id="pause-overlay">
-            <h2>ПАУЗА</h2>
-            <p style="color:#aaa; margin-bottom:20px;">Нажмите ESC, чтобы продолжить</p>
-        </div>
-    </div>
-
-    <!-- 3. ТАБЛИЦА РЕКОРДОВ -->
-    <div id="scores-screen" class="screen">
-        <h1 style="color:#4af;">ТАБЛИЦА ПОЛЕТОВ</h1>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Время выживания</th>
-                    <th>Корабль</th>
-                    <th>Дата</th>
-                </tr>
-            </thead>
-            <tbody id="scores-body">
-                <!-- Сюда JS добавит рекорды -->
-            </tbody>
-        </table>
-        <button class="btn-scores" id="btn-back-menu" style="margin-top:20px;">НАЗАД В МЕНЮ</button>
-    </div>
-
-    <!-- Подключаем game.js -->
     <script type="module" src="game.js"></script>
+    <script src="hangar.js"></script>
 </body>
 </html>
